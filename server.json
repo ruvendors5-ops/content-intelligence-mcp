@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.content-intelligence/api",
+  "version": "1.1.0",
+  "description": "Content Intelligence MCP Server — extract, analyze, research, and compare content. Pay-per-call via x402 (USDC on Base).",
+  "title": "Content Intelligence API",
+  "homepage": "https://content-intelligence-mcp.wajih-hyder55.workers.dev",
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/ruvendors5-ops/content-intelligence-mcp"
+  },
+  "license": "MIT",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://content-intelligence-mcp.wajih-hyder55.workers.dev"
+    }
+  ]
+}
