@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.content-intelligence/api",
-  "version": "1.1.0",
-  "description": "Content Intelligence MCP Server — extract, analyze, research, and compare content. Pay-per-call via x402 (USDC on Base).",
+  "version": "2.1.0",
+  "description": "Content Intelligence MCP Server — 9 tools for content extraction, analysis, research, comparison, monitoring, briefings, and competitive intelligence. Pay-per-call (x402) or subscribe ($5/mo for 200 calls).",
   "title": "Content Intelligence API",
   "homepage": "https://content-intelligence-mcp.wajih-hyder55.workers.dev",
   "repository": {
@@ -10,6 +10,17 @@
     "url": "https://github.com/ruvendors5-ops/content-intelligence-mcp"
   },
   "license": "MIT",
+  "categories": ["data-processing", "content-analysis"],
+  "tags": ["content-extraction", "sentiment-analysis", "research", "competitor-intel", "monitoring", "briefing"],
+  "payment": {
+    "type": "x402",
+    "network": "Base",
+    "asset": "USDC",
+    "subscriptions": {
+      "monthly": { "price": "5 USDC", "calls": 200 },
+      "yearly": { "price": "50 USDC", "calls": 3000 }
+    }
+  },
   "remotes": [
     {
       "type": "streamable-http",

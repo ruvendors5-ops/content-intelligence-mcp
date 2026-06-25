@@ -1,38 +1,56 @@
-# Content Intelligence MCP Server
+# Content Intelligence MCP Server v2.1.0
 
-A **pay-per-call** MCP server for content intelligence — extract, analyze, research, and compare web content using AI. Powered by **freellmpool** (30+ free LLMs) with **x402** payment onchain (USDC on Base).
+A **pay-per-call** MCP server for content intelligence — extract, analyze, research, compare, monitor, and brief. Powered by **freellmpool** (30+ free LLMs) with **x402** payment (USDC on Base) or **subscription** plans.
 
 ## Architecture
 
 ```
-┌──────────────┐     ┌─────────────────┐     ┌──────────────────────┐
-│   AI Agent   │────▶│  MCP Worker     │────▶│  Express API v2     │
-│  (Claude,    │     │  (Cloudflare)   │     │  (AWS EC2)          │
+┌──────────────┐     ┌──────────────────┐     ┌──────────────────────┐
+│   AI Agent   │────▶│  Gateway Worker  │────▶│  Express API v2.1   │
+│  (Claude,    │     │  (x402 + Subs)   │     │  (AWS EC2)          │
 │   Cursor,    │     │                  │     │                      │
-│   etc.)      │◀────│  .well-known/mcp │◀────│  freellmpool (LLMs) │
-└──────────────┘     └─────────────────┘     └──────────────────────┘
+│   etc.)      │◀────│  MCP Worker      │◀────│  freellmpool (LLMs) │
+└──────────────┘     └──────────────────┘     └──────────────────────┘
                            │
-                      ┌────▼────┐
-                      │  x402   │
-                      │ Payment │
-                      │ Gate    │
-                      └─────────┘
+                    ┌──────▼──────┐
+                    │  x402 or    │
+                    │  Subscribe  │
+                    └─────────────┘
 ```
 
-## Tools
+## Tools (9 Total)
 
-| Tool | Description | Price (USDC) |
-|------|-------------|--------------|
-| `extract_content` | Extract clean readable content from a URL. Removes ads, clutter, navigation. | 0.005 |
-| `analyze_text` | Multi-faceted text analysis: summary, sentiment, entities, topics, classification, key points | 0.003 |
-| `research_topic` | Multi-source research synthesis with web search, perspectives, timeline, recommendations | 0.02 |
-| `compare_articles` | Side-by-side comparison of two articles/texts for similarities, differences, coverage, bias | 0.02 |
+| # | Tool | Description | Per-Call Price |
+|---|------|-------------|----------------|
+| 1 | `extract_content` | Extract clean readable content from a URL | 0.005 USDC |
+| 2 | `analyze_text` | Multi-faceted analysis: summary, sentiment, entities, topics, classification | 0.003 USDC |
+| 3 | `research_topic` | Multi-source research synthesis with web search, perspectives, timeline | 0.02 USDC |
+| 4 | `compare_articles` | Side-by-side comparison: similarities, differences, coverage, bias | 0.01 USDC |
+| 5 | `extract_structured` | Extract structured JSON from a URL (custom schema supported) | 0.008 USDC |
+| 6 | `sentiment_over_time` | Sentiment trend analysis across multiple sources (URLs or text) | 0.008 USDC |
+| 7 | `competitor_intel` | Competitive intelligence between two companies (web search + analysis) | 0.025 USDC |
+| 8 | `monitor_page` | Page content extraction with SHA-256 hash for change detection | 0.005 USDC |
+| 9 | `daily_brief` | Multi-source briefing in executive, bullet, or detailed format | 0.015 USDC |
 
-## Usage
+## Subscription Plans
 
-### Connecting (any MCP client)
+Instead of paying per call, subscribe for predictable pricing:
 
-Add to your MCP configuration:
+| Plan | Price | Calls | Effective Rate |
+|------|-------|-------|----------------|
+| Monthly | $5 USDC | 200 | $0.025/call |
+| Yearly | $50 USDC | 3,000 | $0.017/call |
+
+Use subscription via `X-Subscription-Token` header in requests.
+
+## Payment
+
+- **Network:** Base (eip155:8453)
+- **Asset:** USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)
+- **Wallet:** `0x7003209BDDb2253B5Ba902211279a28fB7b39aD7`
+- **Scheme:** x402 (per-call) or Subscription (pre-paid)
+
+## Quick Start for Agents
 
 ```json
 {
@@ -44,78 +62,29 @@ Add to your MCP configuration:
 }
 ```
 
-### Example: Extract content
+## Endpoints
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "extract_content",
-    "arguments": {
-      "url": "https://example.com/article"
-    }
-  }
-}
-```
+| Endpoint | Description |
+|----------|-------------|
+| `POST /v1/extract` | Extract content from URL |
+| `POST /v1/analyze` | Analyze text |
+| `POST /v1/research` | Research topic |
+| `POST /v1/compare` | Compare two sources |
+| `POST /v1/extract-structured` | Structured extraction |
+| `POST /v1/sentiment-over-time` | Sentiment trends |
+| `POST /v1/competitor-intel` | Competitive analysis |
+| `POST /v1/monitor` | Page monitoring |
+| `POST /v1/brief` | Generate briefing |
+| `POST /v1/subscribe` | Create subscription ($5/$50) |
+| `GET /v1/auth/pricing` | Get pricing info |
+| `POST /v1/auth/validate` | Validate subscription token |
+| `GET /health` | API health + version info |
 
-### Example: Compare two articles
+## Deployment
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "compare_articles",
-    "arguments": {
-      "source_a": "https://example.com/article1",
-      "source_b": "https://example.com/article2",
-      "aspect": "general"
-    }
-  }
-}
-```
-
-## Payment
-
-This server uses **x402** — you pay per call in USDC on Base network.
-
-- Wallet: `0x7003209BDDb2253B5Ba902211279a28fB7b39aD7`
-- Network: Base (eip155:8453)
-- Asset: USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)
-
-The x402 gateway at `agent-gateway.wajih-hyder55.workers.dev` handles payment verification.
-
-## Direct API (for developers)
-
-If you prefer the raw REST API:
-
-```
-POST https://agent-gateway.wajih-hyder55.workers.dev/v1/extract
-Content-Type: application/json
-PAYMENT-SIGNATURE: <x402-payment-signature>
-
-{"url": "https://example.com"}
-```
-
-## Self-Hosting
-
-This project is designed to run on free tiers:
-
-- **MCP Worker**: Cloudflare Workers (free tier)
-- **x402 Gateway**: Cloudflare Workers (free tier)
-- **Backend API**: AWS EC2 free tier
-- **LLMs**: freellmpool (free tier, 30+ models)
-
-### Deploy your own
-
-1. Clone this repo
-2. Deploy `src/worker-mcp.js` to Cloudflare Workers
-3. Deploy `src/worker-gateway.js` as x402 payment gate
-4. Set up the Express backend on any VM
-5. Update the `BACKEND` URL in the Workers
+- **Backend:** AWS EC2 (Ubuntu) with PM2, Node.js 22, freellmpool
+- **Workers:** Cloudflare Workers (gateway + MCP)
+- **Payment:** x402.org facilitator for on-chain verification
 
 ## License
 
