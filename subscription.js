@@ -3,12 +3,34 @@ const path = require("path");
 const crypto = require("crypto");
 
 const SUBSCRIPTIONS_FILE = path.join(__dirname, "..", "subscriptions.json");
-const DEFAULT_CALLS_MONTHLY = 200;
-const DEFAULT_CALLS_YEARLY = 3000;
-const PRICE_MONTHLY_USDC = "5.00";
-const PRICE_YEARLY_USDC = "50.00";
 
-// Load subscriptions from file
+const PLANS = {
+  starter:    { price: "5.00",  credits: 1000,  months: 1,  desc: "1,000 credits/mo - ~200 extracts or ~333 analyzes" },
+  pro:        { price: "20.00", credits: 5000,  months: 1,  desc: "5,000 credits/mo - ~1,000 extracts or ~1,666 analyzes" },
+  enterprise: { price: "50.00", credits: 15000, months: 1,  desc: "15,000 credits/mo - ~3,000 extracts or ~5,000 analyzes" },
+  yearly_pro: { price: "200.00", credits: 60000, months: 12, desc: "60,000 credits/yr - best value at $0.003/credit" },
+};
+
+const CREDIT_COSTS = {
+  "/v1/extract":              5,
+  "/v1/analyze":              3,
+  "/v1/research":             20,
+  "/v1/process":              8,
+  "/v1/compare":              10,
+  "/v1/extract-structured":   8,
+  "/v1/sentiment-over-time":  8,
+  "/v1/competitor-intel":     25,
+  "/v1/monitor":              5,
+  "/v1/brief":                15,
+};
+
+function getCost(path) {
+  for (const key of Object.keys(CREDIT_COSTS)) {
+    if (path.startsWith(key)) return CREDIT_COSTS[key];
+  }
+  return 5;
+}
+
 function loadSubscriptions() {
   try {
     if (fs.existsSync(SUBSCRIPTIONS_FILE)) {
@@ -22,7 +44,6 @@ function loadSubscriptions() {
   return [];
 }
 
-// Save subscriptions to file
 function saveSubscriptions(subs) {
   try {
     fs.writeFileSync(SUBSCRIPTIONS_FILE, JSON.stringify(subs, null, 2));
@@ -31,27 +52,24 @@ function saveSubscriptions(subs) {
   }
 }
 
-// Generate a unique subscription token
 function generateToken() {
   return "sub_" + crypto.randomBytes(24).toString("hex");
 }
 
-// Create a new subscription
 function createSubscription(plan) {
   const subs = loadSubscriptions();
-  const isMonthly = plan === "monthly";
+  const planConfig = PLANS[plan];
+  if (!planConfig) throw new Error("Invalid plan: " + plan + ". Valid: " + Object.keys(PLANS).join(", "));
 
   const sub = {
     token: generateToken(),
-    plan,
+    plan: plan,
     status: "active",
-    totalCalls: isMonthly ? DEFAULT_CALLS_MONTHLY : DEFAULT_CALLS_YEARLY,
-    remainingCalls: isMonthly ? DEFAULT_CALLS_MONTHLY : DEFAULT_CALLS_YEARLY,
-    price: isMonthly ? PRICE_MONTHLY_USDC : PRICE_YEARLY_USDC,
+    totalCredits: planConfig.credits,
+    remainingCredits: planConfig.credits,
+    price: planConfig.price,
     createdAt: new Date().toISOString(),
-    expiresAt: new Date(
-      Date.now() + (isMonthly ? 30 : 365) * 24 * 60 * 60 * 1000
-    ).toISOString(),
+    expiresAt: new Date(Date.now() + planConfig.months * 30 * 24 * 60 * 60 * 1000).toISOString(),
     lastUsed: null,
   };
 
@@ -60,73 +78,64 @@ function createSubscription(plan) {
   return sub;
 }
 
-// Validate a subscription token and decrement call count
-function validateAndUseToken(token) {
+function validateAndDeduct(token, reqPath) {
   if (!token || typeof token !== "string") {
     return { valid: false, reason: "no_token" };
   }
 
   const subs = loadSubscriptions();
-  const sub = subs.find((s) => s.token === token);
+  const sub = subs.find(function(s) { return s.token === token; });
 
-  if (!sub) {
-    return { valid: false, reason: "invalid_token" };
-  }
-
-  if (sub.status !== "active") {
-    return { valid: false, reason: "inactive", status: sub.status };
-  }
-
+  if (!sub) return { valid: false, reason: "invalid_token" };
+  if (sub.status !== "active") return { valid: false, reason: "inactive", status: sub.status };
   if (new Date(sub.expiresAt) < new Date()) {
     sub.status = "expired";
     saveSubscriptions(subs);
     return { valid: false, reason: "expired" };
   }
 
-  if (sub.remainingCalls <= 0) {
-    return { valid: false, reason: "exhausted" };
+  const cost = getCost(reqPath);
+  if (sub.remainingCredits < cost) {
+    return { valid: false, reason: "insufficient_credits", remaining: sub.remainingCredits, cost: cost };
   }
 
-  // Decrement call count
-  sub.remainingCalls -= 1;
+  sub.remainingCredits -= cost;
   sub.lastUsed = new Date().toISOString();
   saveSubscriptions(subs);
 
-  return { valid: true, remaining: sub.remainingCalls, plan: sub.plan };
+  return { valid: true, remaining: sub.remainingCredits, cost: cost, plan: sub.plan, total: sub.totalCredits };
 }
 
-// Get subscription info (without decrementing)
 function getSubscriptionInfo(token) {
   if (!token) return null;
-
   const subs = loadSubscriptions();
-  const sub = subs.find((s) => s.token === token);
-
+  const sub = subs.find(function(s) { return s.token === token; });
   if (!sub) return null;
-
   return {
     plan: sub.plan,
     status: sub.status,
-    totalCalls: sub.totalCalls,
-    remainingCalls: sub.remainingCalls,
+    totalCredits: sub.totalCredits,
+    remainingCredits: sub.remainingCredits,
     createdAt: sub.createdAt,
     expiresAt: sub.expiresAt,
     lastUsed: sub.lastUsed,
   };
 }
 
-// Get subscription pricing info
 function getPricing() {
   return {
-    monthly: { price: PRICE_MONTHLY_USDC, calls: DEFAULT_CALLS_MONTHLY, description: "200 calls/month for $5 USDC" },
-    yearly: { price: PRICE_YEARLY_USDC, calls: DEFAULT_CALLS_YEARLY, description: "3000 calls/year for $50 USDC" },
-    payPerCall: { description: "x402 instant payment per API call" },
+    plans: PLANS,
+    creditCosts: CREDIT_COSTS,
+    payPerCall: { description: "x402 instant payment per API call (USDC on Base)" },
   };
 }
 
 module.exports = {
   createSubscription,
-  validateAndUseToken,
+  validateAndDeduct,
   getSubscriptionInfo,
   getPricing,
+  getCost,
+  PLANS: PLANS,
+  CREDIT_COSTS: CREDIT_COSTS,
 };
