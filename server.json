@@ -1,8 +1,8 @@
 {
-  "\$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.ruvendors5-ops/content-intelligence-api",
-  "version": "2.2.0",
-  "description": "Content Intelligence MCP Server — 9 tools for content extraction, analysis, research, comparison, monitoring, briefings, competitive intelligence, and structured data extraction. Pay-per-call (x402) or subscribe with credit bundles.",
+  "version": "2.4.0",
+  "description": "Content Intelligence MCP Server — 9 tools for content extraction, analysis, research, comparison, monitoring, briefings, competitive intelligence, and structured data extraction. Pay-per-call (x402 via xpay.sh facilitator) or subscribe with credit bundles. No API keys needed.",
   "title": "Content Intelligence API",
   "homepage": "https://content-intelligence-mcp.wajih-hyder55.workers.dev",
   "repository": {
@@ -11,17 +11,20 @@
   },
   "license": "MIT",
   "categories": ["data-processing", "content-analysis", "research"],
-  "tags": ["content-extraction", "sentiment-analysis", "research", "competitor-intel", "monitoring", "briefing", "structured-data", "ai-agents"],
+  "tags": ["content-extraction", "sentiment-analysis", "research", "competitor-intel", "monitoring", "briefing", "structured-data", "ai-agents", "x402", "gasless"],
   "payment": {
     "type": "x402",
     "network": "Base",
     "asset": "USDC",
+    "scheme": "exact",
+    "facilitator": "https://facilitator.xpay.sh",
     "subscriptions": {
       "Starter": { "price": "5 USDC", "credits": 1000 },
       "Pro": { "price": "20 USDC", "credits": 5000 },
       "Enterprise": { "price": "50 USDC", "credits": 15000 },
       "Yearly Pro": { "price": "200 USDC", "credits": 60000 }
-    }
+    },
+    "firstSettlement": "0x84add8f258c0a2efb61ef83888a14d7060da59b12caac5233d3cffd5dd576a50"
   },
   "remotes": [
     {
