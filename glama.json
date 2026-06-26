@@ -1,0 +1,21 @@
+{
+  "\$schema": "https://glama.ai/mcp/schemas/server.json",
+  "displayName": "Content Intelligence API",
+  "description": "9 tools for AI agents — content extraction, sentiment analysis, multi-source research, URL comparison, structured data extraction, sentiment trends, competitor intelligence, content monitoring, and executive brief generation. Credit-based subscription + x402 micropayments.",
+  "category": "content-analysis",
+  "maintainers": ["ruvendors5-ops"],
+  "env": [],
+  "transport": "http",
+  "endpoint": "https://content-intelligence-mcp.wajih-hyder55.workers.dev",
+  "tools": [
+    {"name": "extract", "description": "Extract clean readable content from any URL"},
+    {"name": "analyze", "description": "Multi-faceted content analysis: summary, sentiment, entities, topics"},
+    {"name": "research", "description": "Multi-source research synthesis on any topic"},
+    {"name": "compare", "description": "Side-by-side comparison of articles/URLs"},
+    {"name": "extract_structured", "description": "Extract structured JSON from URLs with custom schema support"},
+    {"name": "sentiment_over_time", "description": "Sentiment trend analysis across multiple sources"},
+    {"name": "competitor_intel", "description": "Competitive intelligence between two companies"},
+    {"name": "monitor_page", "description": "Content hash monitoring with watch mode"},
+    {"name": "daily_brief", "description": "Generate executive/bullet/detailed briefings"}
+  ]
+}
